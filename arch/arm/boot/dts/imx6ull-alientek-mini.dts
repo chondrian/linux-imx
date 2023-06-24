@@ -91,3 +91,64 @@
 		};
 	};
 };
+
+// Remove not supported codec.
+/ {
+	/delete-node/ sound-wm8960;
+};
+
+// Adjust SAI2 pinctrl for i.MX6U-MINI.
+&iomuxc {
+	pinctrl_sai2: sai2grp {
+		fsl,pins = <
+			MX6UL_PAD_JTAG_TDI__SAI2_TX_BCLK	0x17088
+			MX6UL_PAD_JTAG_TDO__SAI2_TX_SYNC	0x17088
+			MX6UL_PAD_JTAG_TRST_B__SAI2_TX_DATA	0x11088
+		>;
+	};
+};
+
+&sai2 {
+	#sound-dai-cells = <0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_sai2>;
+
+	assigned-clocks = <&clks IMX6UL_CLK_SAI2_SEL>,
+			  <&clks IMX6UL_CLK_PLL4_AUDIO_DIV>;
+	assigned-clock-parents = <&clks IMX6UL_CLK_PLL4_AUDIO_DIV>;
+	// 196608000 / (192000 * 2 * 32) = 16.0
+	// 196608000 / (48000 * 2 * 16) = 128.0
+	assigned-clock-rates = <2>, <196608000>;
+
+	fsl,sai-asynchronous;
+	/delete-property/ fsl,sai-mclk-direction-output;
+
+	status = "okay";
+};
+
+// Add an I2S Receiver, work under 192K sample rate.
+/ {
+	pcm5102a: pcm5102a {
+		#sound-dai-cells = <0>;
+		compatible = "ti,pcm5102a";
+		status = "okay";
+	};
+
+	sound {
+		compatible = "simple-audio-card";
+		status = "okay";
+		simple-audio-card,name = "audec";
+
+		simple-audio-card,format = "i2s";
+		simple-audio-card,bitclock-master = <&dailink0_master>;
+		simple-audio-card,frame-master = <&dailink0_master>;
+
+		dailink0_master: simple-audio-card,cpu {
+			sound-dai = <&sai2>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&pcm5102a>;
+		};
+	};
+};
