@@ -104,6 +104,7 @@
 			MX6UL_PAD_JTAG_TDI__SAI2_TX_BCLK	0x17088
 			MX6UL_PAD_JTAG_TDO__SAI2_TX_SYNC	0x17088
 			MX6UL_PAD_JTAG_TRST_B__SAI2_TX_DATA	0x11088
+			MX6UL_PAD_JTAG_TMS__SAI2_MCLK		0x17088
 		>;
 	};
 };
@@ -119,9 +120,6 @@
 	// 196608000 / (192000 * 2 * 32) = 16.0
 	// 196608000 / (48000 * 2 * 16) = 128.0
 	assigned-clock-rates = <2>, <196608000>;
-
-	fsl,sai-asynchronous;
-	/delete-property/ fsl,sai-mclk-direction-output;
 
 	status = "okay";
 };
@@ -142,6 +140,8 @@
 		simple-audio-card,format = "i2s";
 		simple-audio-card,bitclock-master = <&dailink0_master>;
 		simple-audio-card,frame-master = <&dailink0_master>;
+		simple-audio-card,convert-rate = <192000>;
+		simple-audio-card,mclk-fs = <256>;
 
 		dailink0_master: simple-audio-card,cpu {
 			sound-dai = <&sai2>;
